@@ -89,10 +89,10 @@ def controller(temps):
     client.publish("gmktec_fan_controller/cmnd/PWM2", fan_speed2, qos=0, retain=False)
     logger.debug(f"temp_sys={temp_sys:.1f}°C Fan2={fan_speed2}")
 
-def temp_to_pwm(temp, high, low, min):
+def temp_to_pwm(temp, high, low, minPWM):
     if temp <= low:
         return 0
-    pwm = int((temp - low) / (high - low) * (256 - min)) + min
+    pwm = int((temp - low) / (high - low) * (256 - minPWM)) + minPWM
     return min(pwm, 255)
 
 def main():
