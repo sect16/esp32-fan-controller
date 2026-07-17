@@ -16,6 +16,7 @@
 #define INTERVALSHORT   1000
 #define INTERVALMEDIUM  2000
 #define INTERVALLONG    10000
+#define CMNDTIMEOUT     10000
 
 #define useWIFI
 #define useMQTT

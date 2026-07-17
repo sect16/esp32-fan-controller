@@ -29,6 +29,7 @@ unsigned long lastReconnectAttempt = millis() - reconnectInterval - 1;
 unsigned long timerStartForHAdiscovery = 1;
 #endif
 bool manual = false;
+unsigned long lastCmnd = 0;
 
 void callback(char *topic, byte *payload, unsigned int length);
 
@@ -397,6 +398,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   {
     if (!manual)
     {
+      lastCmnd = millis();
       Log.printf("Setting pwm1 via mqtt\r\n");
       int num_int = ::atoi(strPayload.c_str());
       Log.printf("new pwm1: %d\r\n", num_int);
@@ -408,6 +410,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   {
     if (!manual)
     {
+      lastCmnd = millis();
       Log.printf("Setting pwm2 via mqtt\r\n");
       int num_int = ::atoi(strPayload.c_str());
       Log.printf("new pwm2: %d\r\n", num_int);
@@ -426,7 +429,6 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   else if (topicReceived == topicCmndInit2)
   {
-
     Log.printf("Setting pwmInit2 via mqtt\r\n");
     int num_int = ::atoi(strPayload.c_str());
     Log.printf("new pwmInit2: %d\r\n", num_int);
@@ -486,3 +488,9 @@ void callback(char *topic, byte *payload, unsigned int length)
 #endif
 }
 #endif
+
+void cmndTimeoutAction(void) {
+  Log.printf("CNMD Timeout, setting to MANUAL\r\n");
+  setPWMvalue(PWMCHANNEL1, pwmInit1);
+  setPWMvalue(PWMCHANNEL2, pwmInit2);
+}

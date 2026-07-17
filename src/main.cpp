@@ -26,6 +26,7 @@ unsigned long previousMillisMediumCycle = 0;
 unsigned long intervalMediumCycle = INTERVALMEDIUM;
 unsigned long previousMillisLongCycle = 0;
 unsigned long intervalLongCycle = INTERVALLONG;
+unsigned long cmndTimeout = CMNDTIMEOUT;
 int loopCount = 0;
 WebServerManager webServer;
 
@@ -120,6 +121,7 @@ void loop(){
     #ifdef useMQTT
     mqtt_publish_tele3();
     mqtt_publish_tele4();
+    if (!manual && millis() - lastCmnd > CMNDTIMEOUT) cmndTimeoutAction();
     #endif
     doLog();
   }

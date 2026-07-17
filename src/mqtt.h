@@ -12,6 +12,7 @@ bool mqtt_publish_stat_manual();
 bool mqtt_publish_stat_pwmInit();
 bool mqtt_publish_stat_pwmInit1();
 bool mqtt_publish_stat_pwmInit2();
+void cmndTimeoutAction(void);
 
 #ifdef useShutdownButton
 bool mqtt_publish_shutdown();
@@ -23,6 +24,8 @@ bool mqtt_publish_shutdown();
    >0: discovery will be sent as soon as "WAITAFTERHAISONLINEUNTILDISCOVERYWILLBESENT" ms are over
 */
 extern unsigned long timerStartForHAdiscovery;
+extern unsigned long lastCmnd;
+extern bool manual;
 bool mqtt_publish_hass_discovery();
 #endif
 #endif
