@@ -4,6 +4,7 @@
 #include "log.h"
 #include "fanPWM.h"
 #include "fanTacho.h"
+#include "mqtt.h"
 
 #if defined(useTelnetStream)
 #include "TelnetStream.h"
@@ -74,5 +75,5 @@ size_t LogStreamClass::printf(const char * format, ...) {
 LogStreamClass Log;
 
 void doLog(void){
-  Log.printf("rpm1 = %d, rpm2 = %d, pwm1 = %d, pwm2 = %d\r\n", rpm[0], rpm[1], getPWMvalue(PWMCHANNEL1), getPWMvalue(PWMCHANNEL2));
+  Log.printf("rpm1 = %d, rpm2 = %d, pwm1 = %d, pwm2 = %d manual = %s\r\n", rpm[0], rpm[1], getPWMvalue(PWMCHANNEL1), getPWMvalue(PWMCHANNEL2), manual ? "true" : "false");
 }

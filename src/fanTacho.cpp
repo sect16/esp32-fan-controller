@@ -32,23 +32,29 @@ void initTacho(void) {
 }
 
 void updateTacho(void) {
-  // start of tacho measurement
   if ((unsigned long)(millis() - millisecondsLastTachoMeasurement) >= TACHOUPDATECYCLE)
   { 
-    // detach interrupt while calculating rpm
-    for (int i=0; i < TACHOINPUTS; i++) detachInterrupt(digitalPinToInterrupt(TACHOPIN[i]));
-    
-    for (int i=0; i < TACHOINPUTS; i++) {
-      // calculate rpm
-      medianRPMs[i].add(counter_rpm[i] * 60 * 1000 / TACHOUPDATECYCLE / NUMBEROFINTERRUPSINONESINGLEROTATION);
-      // Log.printf("fan rpm%d = %.0f counter = %d\r\n", i, medianRPMs[i].getMedian(), counter_rpm[i]);
-      rpm[i] = medianRPMs[i].getMedian();
-      // reset counter
+    for (int i = 0; i < TACHOINPUTS; i++) {
+      detachInterrupt(digitalPinToInterrupt(TACHOPIN[i]));
+    }
+    for (int i = 0; i < TACHOINPUTS; i++) {
+      int rawRPM = counter_rpm[i] * 60 * 1000 / TACHOUPDATECYCLE / NUMBEROFINTERRUPSINONESINGLEROTATION;
+      
+      if (rawRPM <= MAX_RPM) {
+        medianRPMs[i].add(rawRPM);
+        rpm[i] = medianRPMs[i].getMedian();
+      } else {
+        // Changed %.0f to %d because rawRPM is an int
+        Log.printf("Ignored spike on fan %d: %d RPM\r\n", i, rawRPM);
+      }
+      
+      // Always reset the counter for the next interval
       counter_rpm[i] = 0;
     }
-    // store milliseconds when tacho was measured the last time
+    
+    // 3. Update the timestamp
     millisecondsLastTachoMeasurement = millis();
-    // attach interrupt again
+    
     attachInterrupt(digitalPinToInterrupt(TACHOPIN[0]), rpm_fan1, FALLING);
     attachInterrupt(digitalPinToInterrupt(TACHOPIN[1]), rpm_fan2, FALLING);
   }

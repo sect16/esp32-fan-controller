@@ -37,6 +37,7 @@
 #define PWMRESOLUTION         8
 #define FANMAXRPM1            2700         // only used for showing at how many percent fan is running
 #define FANMAXRPM2            2700         // only used for showing at how many percent fan is running
+#define MAX_RPM               5000
 
 // fanTacho
 #define TACHOPIN1                             GPIO_NUM_0 // Fan 1
