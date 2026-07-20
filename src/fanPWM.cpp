@@ -78,12 +78,18 @@ void setManual2(int pwm)
 void setPWMvalue(int channel, int pwm)
 {
   pwm = (int)fmin(256, pwm);
+  if (ledcRead(channel) != pwm) {
+    if (channel == PWMCHANNEL1)
+      pwm1 = pwm;
+    else if (channel == PWMCHANNEL2)
+      pwm2 = pwm;
+    else {
+      Log.printf("Invalid PWM channel specified.\r\n");
+      return;
+    }
   ledcWrite(channel, pwm);
-  if (channel == PWMCHANNEL1)
-    pwm1 = pwm;
-  else if (channel == PWMCHANNEL2)
-    pwm2 = pwm;
-  else Log.printf("Invalid PWM channel specified.\r\n");
+  }
+  else Log.printf("No change in PWM channel %d.\r\n", channel);
 }
 
 int getPWMvalue(int channel)

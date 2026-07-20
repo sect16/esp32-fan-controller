@@ -106,7 +106,6 @@ bool checkMQTTconnection() {
     mqttClient.subscribe(HASSSTATUSTOPIC);
     timerStartForHAdiscovery = millis();
     #endif
-
     return true; // Return true now that we are successfully connected!
   }
   else
@@ -123,11 +122,10 @@ bool publishMQTTMessage(const char *topic, const char *payload, boolean retained
 
   if (checkMQTTconnection())
   {
-    //  Log.printf("Sending mqtt payload to topic \"%s\": %s\r\n", topic, payload);
-
+    Log.printf("Sending mqtt payload to topic \"%s\": %s\r\n", topic, payload);
     if (mqttClient.publish(topic, payload, retained))
     {
-      // Log.printf("Publish ok\r\n");
+      Log.printf("Publish ok\r\n");
       return true;
     }
     else
