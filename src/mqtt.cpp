@@ -94,8 +94,7 @@ bool checkMQTTconnection() {
     mqttClient.subscribe(MQTTCMNDPWMMANUAL1);
     mqttClient.subscribe(MQTTCMNDPWMMANUAL2);
     mqttClient.subscribe(MQTTCMNDMANUAL);
-    mqttClient.subscribe(MQTTCMNDPWM1);
-    mqttClient.subscribe(MQTTCMNDPWM2);
+    mqttClient.subscribe(MQTTCMNDPWM);
     mqttClient.subscribe(MQTTCMNDINIT1);
     mqttClient.subscribe(MQTTCMNDINIT2);
     #if defined(useOTAUpdate)
@@ -333,8 +332,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   Log.printf("MQTT message arrived [%s] %s\r\n", topic, strPayload.c_str());
 
   String topicReceived(topic);
-  String topicCmndPwm1(MQTTCMNDPWM1);
-  String topicCmndPwm2(MQTTCMNDPWM2);
+  String topicCmndPwm(MQTTCMNDPWM);
   String topicCmndPwmManual1(MQTTCMNDPWMMANUAL1);
   String topicCmndPwmManual2(MQTTCMNDPWMMANUAL2);
   String topicCmndRestart(MQTTCMNDRESTART);
@@ -392,27 +390,24 @@ void callback(char *topic, byte *payload, unsigned int length)
     mqtt_publish_stat_pwmManual2();
   }
 
-  if (topicReceived == topicCmndPwm1)
+  if (topicReceived == topicCmndPwm)
   {
     if (!manual)
     {
-      lastCmnd = millis();
       Log.printf("Setting pwm1 via mqtt\r\n");
-      int num_int = ::atoi(strPayload.c_str());
-      Log.printf("new pwm1: %d\r\n", num_int);
-      setPWMvalue(PWMCHANNEL1, num_int);
-    }
-  }
-
-  else if (topicReceived == topicCmndPwm2)
-  {
-    if (!manual)
-    {
-      lastCmnd = millis();
-      Log.printf("Setting pwm2 via mqtt\r\n");
-      int num_int = ::atoi(strPayload.c_str());
-      Log.printf("new pwm2: %d\r\n", num_int);
-      setPWMvalue(PWMCHANNEL2, num_int);
+      int pwm1 = 0, pwm2 = 0;
+      // Parse two integers separated by a comma
+      if (sscanf(strPayload.c_str(), "%d,%d", &pwm1, &pwm2) == 2) 
+      {
+        Log.printf("New PWM values -> PWM1: %d, PWM2: %d\r\n", pwm1, pwm2);
+        setPWMvalue(PWMCHANNEL1, pwm1);
+        setPWMvalue(PWMCHANNEL2, pwm2);
+        lastCmnd = millis();
+      } 
+      else 
+      {
+        Log.printf("Failed to parse PWM string: %s\r\n", strPayload.c_str());
+      }
     }
   }
 

@@ -140,9 +140,8 @@ mosquitto_sub -h localhost -t "homeassistant/fan/esp32_fan_controller/#" -v
 mosquitto_sub -h localhost -t "homeassistant/sensor/esp32_fan_controller/#" -v
 */
 
-#define MQTTCMNDPWM1         UNIQUE_DEVICE_NAME "/cmnd/PWM1"
+#define MQTTCMNDPWM         UNIQUE_DEVICE_NAME "/cmnd/PWM"
 #define MQTTSTATPWM1         UNIQUE_DEVICE_NAME "/stat/PWM1"
-#define MQTTCMNDPWM2         UNIQUE_DEVICE_NAME "/cmnd/PWM2"
 #define MQTTSTATPWM2         UNIQUE_DEVICE_NAME "/stat/PWM2"
 #define MQTTCMNDPWMMANUAL1         UNIQUE_DEVICE_NAME "/cmnd/PWMMANUAL1"
 #define MQTTSTATPWMMANUAL1         UNIQUE_DEVICE_NAME "/stat/PWMMANUAL1"
