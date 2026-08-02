@@ -121,7 +121,7 @@ void loop(){
     #ifdef useMQTT
     mqtt_publish_tele3();
     mqtt_publish_tele4();
-    if (!manual && millis() - lastCmnd > CMNDTIMEOUT) cmndTimeoutAction();
+    if (!manual1 && !manual2 && millis() - lastCmnd > CMNDTIMEOUT) cmndTimeoutAction();
     #endif
     doLog();
   }

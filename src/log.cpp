@@ -75,5 +75,5 @@ size_t LogStreamClass::printf(const char * format, ...) {
 LogStreamClass Log;
 
 void doLog(void){
-  Log.printf("rpm1 = %d, rpm2 = %d, pwm1 = %d, pwm2 = %d manual = %s\r\n", rpm[0], rpm[1], getPWMvalue(PWMCHANNEL1), getPWMvalue(PWMCHANNEL2), manual ? "true" : "false");
+  Log.printf("rpm1 = %d, rpm2 = %d, pwm1 = %d, pwm2 = %d manual1 = %s manual2 = %s\r\n", rpm[0], rpm[1], getPWMvalue(PWMCHANNEL1), getPWMvalue(PWMCHANNEL2), manual1 ? "true" : "false", manual2 ? "true" : "false");
 }

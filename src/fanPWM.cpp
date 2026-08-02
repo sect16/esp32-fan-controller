@@ -25,6 +25,7 @@ void initPWMfan(void)
   ledcSetup(PWMCHANNEL2, PWMFREQ, PWMRESOLUTION);
   ledcAttachPin(PWMPIN1, PWMCHANNEL1);
   ledcAttachPin(PWMPIN2, PWMCHANNEL2);
+  //pinMode(PWMPIN2, OUTPUT_OPEN_DRAIN);
 
   preferences.begin("hiveMon", false);
   pwmInit1 = preferences.getInt("pwmI1", 256);
@@ -89,7 +90,7 @@ void setPWMvalue(int channel, int pwm)
     }
   ledcWrite(channel, pwm);
   }
-  else Log.printf("No change in PWM channel %d.\r\n", channel);
+  // else Log.printf("No change in PWM channel %d.\r\n", channel);
 }
 
 int getPWMvalue(int channel)

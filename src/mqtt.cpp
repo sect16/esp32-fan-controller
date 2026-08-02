@@ -28,7 +28,8 @@ unsigned long lastReconnectAttempt = millis() - reconnectInterval - 1;
 #ifdef useHomeassistantMQTTDiscovery
 unsigned long timerStartForHAdiscovery = 1;
 #endif
-bool manual = false;
+bool manual1 = false;
+bool manual2 = false;
 unsigned long lastCmnd = 0;
 
 void callback(char *topic, byte *payload, unsigned int length);
@@ -93,7 +94,8 @@ bool checkMQTTconnection() {
     // Subscriptions
     mqttClient.subscribe(MQTTCMNDPWMMANUAL1);
     mqttClient.subscribe(MQTTCMNDPWMMANUAL2);
-    mqttClient.subscribe(MQTTCMNDMANUAL);
+    mqttClient.subscribe(MQTTCMNDMANUAL1);
+    mqttClient.subscribe(MQTTCMNDMANUAL2);
     mqttClient.subscribe(MQTTCMNDPWM);
     mqttClient.subscribe(MQTTCMNDINIT1);
     mqttClient.subscribe(MQTTCMNDINIT2);
@@ -122,15 +124,8 @@ bool publishMQTTMessage(const char *topic, const char *payload, boolean retained
   if (checkMQTTconnection())
   {
     Log.printf("Sending mqtt payload to topic \"%s\": %s\r\n", topic, payload);
-    if (mqttClient.publish(topic, payload, retained))
-    {
-      Log.printf("Publish ok\r\n");
-      return true;
-    }
-    else
-    {
-      Log.printf("Publish failed\r\n");
-    }
+    if (mqttClient.publish(topic, payload, retained)) return true;
+    else Log.printf("Publish failed\r\n");
   }
   else
   {
@@ -179,9 +174,14 @@ bool mqtt_publish_stat_init2()
   return publishMQTTMessage(MQTTSTATINIT2, String(pwmInit2).c_str());
 };
 
-bool mqtt_publish_stat_pwmManual()
+bool mqtt_publish_stat_manual1()
 {
-  return publishMQTTMessage(MQTTSTATMANUAL, "OFF");
+  return publishMQTTMessage(MQTTSTATMANUAL1, "OFF");
+};
+
+bool mqtt_publish_stat_manual2()
+{
+  return publishMQTTMessage(MQTTSTATMANUAL2, "OFF");
 };
 
 #ifdef useHomeassistantMQTTDiscovery
@@ -196,7 +196,8 @@ bool mqtt_publish_hass_discovery()
   error = error || !publishMQTTMessage(HASSSENSORPWM1DISCOVERYTOPIC, HASSSENSORPWM1DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSSENSORPWM2DISCOVERYTOPIC, HASSSENSORPWM2DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSSWITCHOTADISCOVERYTOPIC, HASSSWITCHOTADISCOVERYPAYLOAD);
-  error = error || !publishMQTTMessage(HASSSWITCHMANUALDISCOVERYTOPIC, HASSSWITCHMANUALDISCOVERYPAYLOAD);
+  error = error || !publishMQTTMessage(HASSSWITCHMANUAL1DISCOVERYTOPIC, HASSSWITCHMANUAL1DISCOVERYPAYLOAD);
+  error = error || !publishMQTTMessage(HASSSWITCHMANUAL2DISCOVERYTOPIC, HASSSWITCHMANUAL2DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSBUTTONRESTARTDISCOVERYTOPIC, HASSBUTTONRESTARTDISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSSENSORIPDISCOVERYTOPIC, HASSSENSORIPDISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSSENSORMACDISCOVERYTOPIC, HASSSENSORMACDISCOVERYPAYLOAD);
@@ -210,7 +211,8 @@ bool mqtt_publish_hass_discovery()
   error = error || !publishMQTTMessage(HASSSENSORSPD5118DISCOVERYTOPIC, HASSSENSORSPD5118DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSSENSORSPD5118_1DISCOVERYTOPIC, HASSSENSORSPD5118_1DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSSENSOREDGEDISCOVERYTOPIC, HASSSENSOREDGEDISCOVERYPAYLOAD);
-  error = error || !publishMQTTMessage(HASSSWITCHMANUALDISCOVERYTOPIC, HASSSWITCHMANUALDISCOVERYPAYLOAD);
+  error = error || !publishMQTTMessage(HASSSWITCHMANUAL1DISCOVERYTOPIC, HASSSWITCHMANUAL1DISCOVERYPAYLOAD);
+  error = error || !publishMQTTMessage(HASSSWITCHMANUAL2DISCOVERYTOPIC, HASSSWITCHMANUAL2DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSNUMBERPWMINIT1DISCOVERYTOPIC, HASSNUMBERPWMINIT1DISCOVERYPAYLOAD);
   error = error || !publishMQTTMessage(HASSNUMBERPWMINIT2DISCOVERYTOPIC, HASSNUMBERPWMINIT2DISCOVERYPAYLOAD);
   if (!error)
@@ -222,7 +224,8 @@ bool mqtt_publish_hass_discovery()
   error = error || !publishMQTTMessage(HASSFANSTATUSTOPIC, HASSSTATUSONLINEPAYLOAD);
   error = error || !mqtt_publish_stat_pwmManual1();
   error = error || !mqtt_publish_stat_pwmManual2();
-  error = error || !mqtt_publish_stat_pwmManual();
+  error = error || !mqtt_publish_stat_manual1();
+  error = error || !mqtt_publish_stat_manual2();
   error = error || !mqtt_publish_stat_ota();
   error = error || !mqtt_publish_stat_init1();
   error = error || !mqtt_publish_stat_init2();
@@ -336,7 +339,8 @@ void callback(char *topic, byte *payload, unsigned int length)
   String topicCmndPwmManual1(MQTTCMNDPWMMANUAL1);
   String topicCmndPwmManual2(MQTTCMNDPWMMANUAL2);
   String topicCmndRestart(MQTTCMNDRESTART);
-  String topicCmndManual(MQTTCMNDMANUAL);
+  String topicCmndManual1(MQTTCMNDMANUAL1);
+  String topicCmndManual2(MQTTCMNDMANUAL2);
   String topicCmndInit1(MQTTCMNDINIT1);
   String topicCmndInit2(MQTTCMNDINIT2);
 #if defined(useOTAUpdate)
@@ -346,21 +350,41 @@ void callback(char *topic, byte *payload, unsigned int length)
   String topicHaStatus(HASSSTATUSTOPIC);
 #endif
 
-  if (topicReceived == topicCmndManual)
+  if (topicReceived == topicCmndManual1)
+  {
+    if (strPayload == "ON")
+    {
+      Log.printf("Fan 1 manual ON via mqtt\r\n");
+      manual1 = true;
+      publishMQTTMessage(MQTTSTATMANUAL1, "ON");
+      setPWMvalue(PWMCHANNEL1, pwmManual1);
+    }
+    else if (strPayload == "OFF")
+    {
+      Log.printf("Fan 1 manual OFF via mqtt\r\n");
+      manual1 = false;
+      publishMQTTMessage(MQTTSTATMANUAL1, "OFF");
+    }
+    else
+    {
+      Log.printf("Payload %s not supported\r\n", strPayload.c_str());
+    }
+  }
+
+  if (topicReceived == topicCmndManual2)
   {
     if (strPayload == "ON")
     {
       Log.printf("Setting pwm manually ON via mqtt\r\n");
-      manual = true;
-      publishMQTTMessage(MQTTSTATMANUAL, "ON");
-      setPWMvalue(PWMCHANNEL1, pwmManual1);
+      manual2 = true;
+      publishMQTTMessage(MQTTSTATMANUAL2, "ON");
       setPWMvalue(PWMCHANNEL2, pwmManual2);
     }
     else if (strPayload == "OFF")
     {
-      Log.printf("Setting pwm manually OFF via mqtt\r\n");
-      manual = false;
-      publishMQTTMessage(MQTTSTATMANUAL, "OFF");
+      Log.printf("Fan 2 manual OFF via mqtt\r\n");
+      manual2 = false;
+      publishMQTTMessage(MQTTSTATMANUAL2, "OFF");
     }
     else
     {
@@ -375,7 +399,7 @@ void callback(char *topic, byte *payload, unsigned int length)
     Log.printf("new pwmManual1: %d\r\n", num_int);
     setManual1(num_int);
     mqtt_publish_stat_pwmManual1();
-    if (manual)
+    if (manual1)
       setPWMvalue(PWMCHANNEL1, num_int);
   }
 
@@ -385,29 +409,24 @@ void callback(char *topic, byte *payload, unsigned int length)
     int num_int = ::atoi(strPayload.c_str());
     Log.printf("new pwmManual2: %d\r\n", num_int);
     setManual2(num_int);
-    if (manual)
+    if (manual2)
       setPWMvalue(PWMCHANNEL2, num_int);
     mqtt_publish_stat_pwmManual2();
   }
 
   if (topicReceived == topicCmndPwm)
   {
-    if (!manual)
+    Log.printf("Setting pwm via mqtt\r\n");
+    int pwm1 = 0, pwm2 = 0;
+    if (sscanf(strPayload.c_str(), "%d,%d", &pwm1, &pwm2) == 2) 
     {
-      Log.printf("Setting pwm1 via mqtt\r\n");
-      int pwm1 = 0, pwm2 = 0;
-      // Parse two integers separated by a comma
-      if (sscanf(strPayload.c_str(), "%d,%d", &pwm1, &pwm2) == 2) 
-      {
-        Log.printf("New PWM values -> PWM1: %d, PWM2: %d\r\n", pwm1, pwm2);
-        setPWMvalue(PWMCHANNEL1, pwm1);
-        setPWMvalue(PWMCHANNEL2, pwm2);
-        lastCmnd = millis();
-      } 
-      else 
-      {
-        Log.printf("Failed to parse PWM string: %s\r\n", strPayload.c_str());
-      }
+      if (!manual1) setPWMvalue(PWMCHANNEL1, pwm1);
+      if (!manual2) setPWMvalue(PWMCHANNEL2, pwm2);
+      lastCmnd = millis();
+    } 
+    else 
+    {
+      Log.printf("Failed to parse PWM string: %s\r\n", strPayload.c_str());
     }
   }
 

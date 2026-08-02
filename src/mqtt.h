@@ -25,7 +25,8 @@ bool mqtt_publish_shutdown();
 */
 extern unsigned long timerStartForHAdiscovery;
 extern unsigned long lastCmnd;
-extern bool manual;
+extern bool manual1;
+extern bool manual2;
 bool mqtt_publish_hass_discovery();
 #endif
 #endif
