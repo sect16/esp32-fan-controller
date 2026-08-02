@@ -34,6 +34,7 @@ void setup(){
   Serial.begin(115200);
   Serial.println("");
   Log.printf("Booting up ...\r\n");
+
   #ifdef useWIFI
   Log.printf("Setting up WiFi ...\r\n");
   wifi_setup();
@@ -41,8 +42,15 @@ void setup(){
   #endif
   #if defined(useOTAUpdate)
   OTA_setup(HOSTNAME);
-  // Do not start OTA. Save heap space and start it via MQTT only when needed.
-  // ArduinoOTA.begin();
+  ArduinoOTA.begin();
+  Log.printf("Recovery Window Open (5 seconds)...");
+  unsigned long startTime = millis();
+  while (millis() - startTime < 5000) {
+    ArduinoOTA.handle();
+    delay(10);
+  }
+  ArduinoOTA.end();
+  Log.printf("Recovery window closed.");
   #endif
   #if defined(useTelnetStream)
   TelnetStream.begin();
