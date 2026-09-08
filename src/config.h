@@ -30,7 +30,7 @@
 // --- Fan parameters ----------------------------------------------------------------------------------------------------------------------------
 // fanPWM
 #define PWMPIN1               GPIO_NUM_1
-#define PWMPIN2               GPIO_NUM_3
+#define PWMPIN2               GPIO_NUM_4
 #define PWMFREQ               25000
 #define PWMCHANNEL1           0
 #define PWMCHANNEL2           1
@@ -51,10 +51,10 @@
 
 #ifdef useTFT
 #define TFT_CS                GPIO_NUM_7    //diplay chip select
-#define TFT_DC                GPIO_NUM_4    //display d/c
+#define TFT_DC                GPIO_NUM_3    //display d/c
 #define TFT_RST               GPIO_NUM_8   //display reset
 #define TFT_MOSI              GPIO_NUM_6   //diplay MOSI
-#define TFT_CLK               GPIO_NUM_4   //display clock
+#define TFT_CLK               GPIO_NUM_3   //display clock
 #define LED_ON                HIGH          // override it in file "config_override.h"
 
 #ifdef DRIVER_ILI9341

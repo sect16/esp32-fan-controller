@@ -112,6 +112,7 @@ bool checkMQTTconnection() {
   else
   {
     Log.printf("  MQTT connection failed (but WiFi is available). Will try later ...\r\n");
+    cmndTimeoutAction();
     return false;
   }
 }
