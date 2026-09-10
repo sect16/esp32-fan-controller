@@ -28,17 +28,17 @@ def discover_sensors():
     for hwmon in sorted(os.listdir("/sys/class/hwmon")):
         hwmon_path = os.path.join("/sys/class/hwmon", hwmon)
         name_file = os.path.join(hwmon_path, "name")
-        
+
         driver = "unknown"
         if os.path.exists(name_file):
             with open(name_file, "r") as f:
                 driver = f.read().strip()
-                
+
         for file in sorted(os.listdir(hwmon_path)):
             if file.startswith("temp") and file.endswith("_input"):
                 input_path = os.path.join(hwmon_path, file)
                 label_path = os.path.join(hwmon_path, file.replace("_input", "_label"))
-                
+
                 # Determine base label
                 if os.path.exists(label_path):
                     with open(label_path, "r") as f:
@@ -75,7 +75,7 @@ def setup_mqtt():
     client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
     client.tls_set(cert_reqs=ssl.CERT_NONE)
     client.tls_insecure_set(True)
-    
+
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
 
@@ -148,22 +148,24 @@ def controller(temps):
     temp_sys = max(sys_temps) if sys_temps else tctl
 
     fan_speed2 = temp_to_pwm(temp_sys, SYSTEM_HIGH, SYSTEM_LOW, SYSTEM_MIN_PWM)
-    
+
     payload = f"{fan_speed1},{fan_speed2}"
     if client.is_connected():
         client.publish("gmktec_fan_controller/cmnd/PWM", payload, qos=0, retain=False)
-        
+
     logger.debug(f"temp_cpu={tctl:.1f}°C temp_sys={temp_sys:.1f}°C cmnd/PWM={payload}")
 
 def main():
     setup_mqtt()
-    
+
+    # Set an explicit socket timeout to prevent socket reads from hanging forever
+    client.socket().settimeout(5.0) if client.socket() else None
+
     try:
-        client.connect(MQTT_HOST, MQTT_PORT)
+        client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
     except Exception as e:
         logger.error(f"Initial connection to broker failed: {e}")
 
-    # Start background loop (handles reconnects, pings, and callbacks)
     client.loop_start()
 
     seconds_counter = 0.0
@@ -175,14 +177,30 @@ def main():
                 if seconds_counter >= POLL_STAT:
                     publish_message(MQTT_TOPIC, temp)
                     seconds_counter = 0.0
-            
+
             time.sleep(POLL_FAN)
             seconds_counter += POLL_FAN
+
     except KeyboardInterrupt:
         logger.info("Script interrupted by user")
+
     finally:
-        client.loop_stop()
-        client.disconnect()
+        logger.info("Cleaning up MQTT connection...")
+
+        # 1. Initiate disconnect FIRST so the background loop can process the packet
+        try:
+            client.disconnect()
+        except Exception as e:
+            logger.error(f"Error sending disconnect packet: {e}")
+
+        # 2. Stop the loop thread with a strict timeout (force join)
+        # Setting force=True (available in paho-mqtt v2+) forces loop_stop to return
+        try:
+            client.loop_stop()
+        except Exception as e:
+            logger.error(f"Error stopping MQTT loop: {e}")
+
+        logger.info("Shutdown complete.")
 
 if __name__ == "__main__":
     main()
